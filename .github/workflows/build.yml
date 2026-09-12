@@ -29,13 +29,17 @@ jobs:
         run: |
           unzip Business_Invoice_Stock_2027-1.zip -d app_files
 
-      - name: Configure Gradle Properties & Build APK
+      - name: Patch AGP and Build APK
         run: |
           cd app_files
           mkdir -p android
+          
+          # Weka mipangilio ya kuzuia newDsl na makosa ya Gradle
           echo "android.newDsl=false" >> android/gradle.properties
+          echo "android.defaults.buildfeatures.buildconfig=true" >> android/gradle.properties
+
           flutter pub get
-          flutter build apk --release
+          flutter build apk --release --suppress-analytics
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
