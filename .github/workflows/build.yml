@@ -35,28 +35,13 @@ jobs:
         run: |
           cd ${{ env.PROJ_DIR }}
 
-          # 1. Weka mipangilio ya gradle.properties
+          # 1. Tengeneza/sasisha gradle.properties
           mkdir -p android
           echo "android.newDsl=false" >> android/gradle.properties
           echo "android.overrideVersionCheck=true" >> android/gradle.properties
           echo "android.defaults.buildfeatures.buildconfig=true" >> android/gradle.properties
 
-          # 2. Tumia Python kubadilisha toleo la AGP kwa usalama
-          python3 -c '
-          import os, re
-          for root, dirs, files in os.walk("android"):
-              for file in files:
-                  if file.endswith((".gradle", ".kts")):
-                      path = os.path.join(root, file)
-                      with open(path, "r", encoding="utf-8", errors="ignore") as f:
-                          content = f.read()
-                      new_content = re.sub(r"id\([\"'\']com\.android\.application[\"'\']\)\s+version\s+[\"'\'][^\"'\']+[\"'\']", "id(\"com.android.application\") version \"8.2.1\"", content)
-                      new_content = re.sub(r"com\.android\.tools\.build:gradle:[^\s\"'\']+", "com.android.tools.build:gradle:8.2.1", new_content)
-                      if content != new_content:
-                          with open(path, "w", encoding="utf-8") as f:
-                              f.write(new_content)
-          '
-
+          # 2. Get dependencies & build APK
           flutter pub get
           flutter build apk --release --no-tree-shake-icons
 
