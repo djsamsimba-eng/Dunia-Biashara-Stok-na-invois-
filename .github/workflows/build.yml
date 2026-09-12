@@ -17,12 +17,12 @@ jobs:
         uses: actions/setup-java@v3
         with:
           distribution: 'zulu'
-          java-version: '21'
+          java-version: '17'
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'
+          flutter-version: '3.24.0'
           cache: true
 
       - name: Unzip Project Files
@@ -33,7 +33,7 @@ jobs:
         run: |
           cd app_files
           flutter pub get
-          flutter build apk --release --no-build-shared-library
+          flutter build apk --release
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
