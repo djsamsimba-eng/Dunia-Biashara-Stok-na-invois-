@@ -31,19 +31,31 @@ jobs:
           PROJ_DIR=$(find app_files -name "pubspec.yaml" -exec dirname {} \;)
           echo "PROJ_DIR=$PROJ_DIR" >> $GITHUB_ENV
 
-      - name: Downgrade AGP & Build APK
+      - name: Patch AGP and Build APK
         run: |
           cd ${{ env.PROJ_DIR }}
 
-          # 1. Hakikisha gradle.properties inazuia newDsl
+          # 1. Weka mipangilio ya gradle.properties
           mkdir -p android
           echo "android.newDsl=false" >> android/gradle.properties
           echo "android.overrideVersionCheck=true" >> android/gradle.properties
           echo "android.defaults.buildfeatures.buildconfig=true" >> android/gradle.properties
 
-          # 2. Badilisha toleo la AGP 9.x au lipo juu kwenda 8.2.1 kwenye settings.gradle.kts au build.gradle.kts
-          find android/ -type f \( -name "*.gradle*" -o -name "*.kts" \) -exec sed -i 's/9\.[0-9]\.[0-9][a-zA-Z0-9-.]*/8.2.1/g' {} +
-          find android/ -type f \( -name "*.gradle*" -o -name "*.kts" \) -exec sed -i 's/8\.9\.[0-9][a-zA-Z0-9-.]*/8.2.1/g' {} +
+          # 2. Tumia Python kubadilisha toleo la AGP kwa usalama
+          python3 -c '
+          import os, re
+          for root, dirs, files in os.walk("android"):
+              for file in files:
+                  if file.endswith((".gradle", ".kts")):
+                      path = os.path.join(root, file)
+                      with open(path, "r", encoding="utf-8", errors="ignore") as f:
+                          content = f.read()
+                      new_content = re.sub(r"id\([\"'\']com\.android\.application[\"'\']\)\s+version\s+[\"'\'][^\"'\']+[\"'\']", "id(\"com.android.application\") version \"8.2.1\"", content)
+                      new_content = re.sub(r"com\.android\.tools\.build:gradle:[^\s\"'\']+", "com.android.tools.build:gradle:8.2.1", new_content)
+                      if content != new_content:
+                          with open(path, "w", encoding="utf-8") as f:
+                              f.write(new_content)
+          '
 
           flutter pub get
           flutter build apk --release --no-tree-shake-icons
