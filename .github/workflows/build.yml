@@ -35,7 +35,7 @@ jobs:
         run: |
           cd ${{ env.PROJ_DIR }}
 
-          # 1. Tengeneza skripti ya kurekebisha sdk constraint pekee
+          # 1. Rekebisha sdk na intl package toleo la 0.19.0
           cat << 'EOF' > patch_pubspec.py
           import re
 
@@ -44,9 +44,14 @@ jobs:
 
           new_lines = []
           for line in lines:
+              # Badilisha SDK constraint
               if re.match(r"^\s*sdk:\s*[\"']?[^\"'\n]+[\"']?", line) and "flutter" not in line:
                   indent = line[:line.find("sdk:")]
                   new_lines.append(f'{indent}sdk: ">=3.0.0 <4.0.0"\n')
+              # Badilisha intl constraint kuwa 0.19.0 au kuoana nayo
+              elif re.match(r"^\s*intl:\s*", line):
+                  indent = line[:line.find("intl:")]
+                  new_lines.append(f'{indent}intl: ^0.19.0\n')
               else:
                   new_lines.append(line)
 
@@ -56,7 +61,7 @@ jobs:
 
           python3 patch_pubspec.py
 
-          # 2. Weka flag za kuzuia AGP 9 kwenye gradle.properties zote mbili (root na android/)
+          # 2. Weka mipangilio ya gradle.properties
           mkdir -p android
           echo "android.newDsl=false" >> android/gradle.properties
           echo "android.overrideVersionCheck=true" >> android/gradle.properties
@@ -65,9 +70,9 @@ jobs:
           echo "android.newDsl=false" >> gradle.properties
           echo "android.overrideVersionCheck=true" >> gradle.properties
 
-          # 3. Fetch dependencies na build APK kwa kulinganisha flags za AGP
+          # 3. Pakua packages na build APK
           flutter pub get
-          flutter build apk --release --no-tree-shake-icons --Pandroid.newDsl=false -Pandroid.overrideVersionCheck=true
+          flutter build apk --release --no-tree-shake-icons
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
