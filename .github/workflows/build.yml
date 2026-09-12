@@ -28,19 +28,21 @@ jobs:
       - name: Extract Project Files
         run: |
           unzip Business_Invoice_Stock_2027-1.zip -d app_files
-          # Tafuta folda yenye pubspec.yaml na uingie humo
           PROJ_DIR=$(find app_files -name "pubspec.yaml" -exec dirname {} \;)
           echo "PROJ_DIR=$PROJ_DIR" >> $GITHUB_ENV
 
-      - name: Fix Gradle & Build APK
+      - name: Patch AGP Version & Build APK
         run: |
           cd ${{ env.PROJ_DIR }}
-          
-          # Hakikisha android/gradle.properties inasasishwa ipasavyo
+
+          # Rekebisha mazingira ya Android Gradle
           mkdir -p android
-          touch android/gradle.properties
           echo "android.newDsl=false" >> android/gradle.properties
           echo "android.overrideVersionCheck=true" >> android/gradle.properties
+
+          # Rekebisha matoleo ya AGP kwenye settings.gradle au build.gradle ikiwa yapo
+          find android/ -type f \( -name "settings.gradle*" -o -name "build.gradle*" \) -exec sed -i 's/8\.9\.[0-9]/8.2.1/g' {} +
+          find android/ -type f \( -name "settings.gradle*" -o -name "build.gradle*" \) -exec sed -i 's/9\.[0-9]\.[0-9]/8.2.1/g' {} +
 
           flutter pub get
           flutter build apk --release
