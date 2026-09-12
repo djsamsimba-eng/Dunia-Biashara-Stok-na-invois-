@@ -14,9 +14,9 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Java
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
-          distribution: 'zulu'
+          distribution: 'temurin'
           java-version: '17'
 
       - name: Setup Flutter
@@ -35,10 +35,10 @@ jobs:
         run: |
           cd ${{ env.PROJ_DIR }}
 
-          # 1. Badilisha takwa la sdk kwenye pubspec.yaml kuwa ^3.0.0 ili kuzuia kukataliwa
+          # 1. Badilisha takwa la sdk kwenye pubspec.yaml
           sed -i 's/sdk: .*/sdk: ">=3.0.0 <4.0.0"/' pubspec.yaml
 
-          # 2. Hakikisha gradle.properties inazuia newDsl
+          # 2. Weka gradle.properties
           mkdir -p android
           echo "android.newDsl=false" >> android/gradle.properties
           echo "android.overrideVersionCheck=true" >> android/gradle.properties
