@@ -31,21 +31,25 @@ jobs:
           PROJ_DIR=$(find app_files -name "pubspec.yaml" -exec dirname {} \;)
           echo "PROJ_DIR=$PROJ_DIR" >> $GITHUB_ENV
 
-      - name: Patch AGP Version & Build APK
+      - name: Override Gradle Properties & Build APK
         run: |
           cd ${{ env.PROJ_DIR }}
 
-          # Rekebisha mazingira ya Android Gradle
+          # Hakikisha folda ya android ipo
           mkdir -p android
-          echo "android.newDsl=false" >> android/gradle.properties
-          echo "android.overrideVersionCheck=true" >> android/gradle.properties
 
-          # Rekebisha matoleo ya AGP kwenye settings.gradle au build.gradle ikiwa yapo
-          find android/ -type f \( -name "settings.gradle*" -o -name "build.gradle*" \) -exec sed -i 's/8\.9\.[0-9]/8.2.1/g' {} +
-          find android/ -type f \( -name "settings.gradle*" -o -name "build.gradle*" \) -exec sed -i 's/9\.[0-9]\.[0-9]/8.2.1/g' {} +
+          # Weka mipangilio kamili ya kuzuia migogoro ya AGP na newDsl
+          cat <<EOT > android/gradle.properties
+          org.gradle.jvmargs=-Xmx4608m
+          android.useAndroidX=true
+          android.enableJetifier=true
+          android.newDsl=false
+          android.overrideVersionCheck=true
+          android.defaults.buildfeatures.buildconfig=true
+          EOT
 
           flutter pub get
-          flutter build apk --release
+          flutter build apk --release --no-tree-shake-icons
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
