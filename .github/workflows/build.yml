@@ -1,4 +1,4 @@
-name: Build APK from Zip
+name: Build Flutter APK
 
 on:
   workflow_dispatch:
@@ -13,37 +13,30 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Unzip Project Files
-        run: |
-          unzip Business_Invoice_Stock_2027-1.zip -d app_files
-          echo "Files extracted successfully:"
-          ls -la app_files
-
       - name: Setup Java
         uses: actions/setup-java@v3
         with:
           distribution: 'zulu'
           java-version: '17'
 
-      - name: Find and Build Gradle / Android Project
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Unzip Project Files
+        run: |
+          unzip Business_Invoice_Stock_2027-1.zip -d app_files
+
+      - name: Get Dependencies & Build APK
         run: |
           cd app_files
-          # Kama mradi una inner folder, ingia humo
-          if [ -d "$(ls -d */ | head -n 1)" ]; then
-            cd "$(ls -d */ | head -n 1)"
-          fi
-          
-          if [ -f "gradlew" ]; then
-            chmod +x gradlew
-            ./gradlew assembleDebug
-          else
-            echo "No gradlew found directly, searching..."
-            find . -name "gradlew" -exec chmod +x {} \;
-            find . -name "gradlew" -execdir ./gradlew assembleDebug \;
-          fi
+          flutter pub get
+          flutter build apk --release
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: app-debug-apk
-          path: '**/build/outputs/apk/debug/*.apk'
+          name: Dunia-Biashara-App-APK
+          path: app_files/build/app/outputs/flutter-apk/app-release.apk
