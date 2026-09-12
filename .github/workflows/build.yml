@@ -22,7 +22,7 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.29.0'
+          channel: 'master'
           cache: true
 
       - name: Extract Project Files
@@ -31,9 +31,18 @@ jobs:
           PROJ_DIR=$(find app_files -name "pubspec.yaml" -exec dirname {} \;)
           echo "PROJ_DIR=$PROJ_DIR" >> $GITHUB_ENV
 
-      - name: Build APK
+      - name: Patch pubspec.yaml & Build APK
         run: |
           cd ${{ env.PROJ_DIR }}
+
+          # 1. Badilisha takwa la sdk kwenye pubspec.yaml kuwa ^3.0.0 ili kuzuia kukataliwa
+          sed -i 's/sdk: .*/sdk: ">=3.0.0 <4.0.0"/' pubspec.yaml
+
+          # 2. Hakikisha gradle.properties inazuia newDsl
+          mkdir -p android
+          echo "android.newDsl=false" >> android/gradle.properties
+          echo "android.overrideVersionCheck=true" >> android/gradle.properties
+
           flutter pub get
           flutter build apk --release --no-tree-shake-icons
 
