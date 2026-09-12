@@ -35,28 +35,34 @@ jobs:
         run: |
           cd ${{ env.PROJ_DIR }}
 
-          # Rekebisha sdk bila kutumia backslash kwenye quotes
-          python3 -c '
-          with open("pubspec.yaml", "r") as f:
-              content = f.read()
-
+          # 1. Tengeneza skripti ya Python tofauti ili kuepuka migogoro ya syntax
+          cat << 'EOF' > patch_pubspec.py
           import re
-          new_content = re.sub(
-              r"(environment:\s*\n\s*sdk:\s*)[^\n]+",
-              r"\1'\">=3.0.0 <4.0.0\"'",
-              content
-          )
+
+          with open("pubspec.yaml", "r") as f:
+              lines = f.readlines()
+
+          new_lines = []
+          for line in lines:
+              if re.match(r"^\s*sdk:\s*[\"']?[^\"'\n]+[\"']?", line) and "flutter" not in line:
+                  indent = line[:line.find("sdk:")]
+                  new_lines.append(f'{indent}sdk: ">=3.0.0 <4.0.0"\n')
+              else:
+                  new_lines.append(line)
 
           with open("pubspec.yaml", "w") as f:
-              f.write(new_content)
-          '
+              f.writelines(new_lines)
+          EOF
 
-          # Weka mipangilio ya gradle.properties
+          # 2. Endesha skripti ya Python
+          python3 patch_pubspec.py
+
+          # 3. Weka mipangilio ya gradle.properties
           mkdir -p android
           echo "android.newDsl=false" >> android/gradle.properties
           echo "android.overrideVersionCheck=true" >> android/gradle.properties
 
-          # Pakua packages na build APK
+          # 4. Pakua packages na build APK
           flutter pub get
           flutter build apk --release --no-tree-shake-icons
 
