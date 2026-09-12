@@ -31,22 +31,19 @@ jobs:
           PROJ_DIR=$(find app_files -name "pubspec.yaml" -exec dirname {} \;)
           echo "PROJ_DIR=$PROJ_DIR" >> $GITHUB_ENV
 
-      - name: Override Gradle Properties & Build APK
+      - name: Downgrade AGP & Build APK
         run: |
           cd ${{ env.PROJ_DIR }}
 
-          # Hakikisha folda ya android ipo
+          # 1. Hakikisha gradle.properties inazuia newDsl
           mkdir -p android
+          echo "android.newDsl=false" >> android/gradle.properties
+          echo "android.overrideVersionCheck=true" >> android/gradle.properties
+          echo "android.defaults.buildfeatures.buildconfig=true" >> android/gradle.properties
 
-          # Weka mipangilio kamili ya kuzuia migogoro ya AGP na newDsl
-          cat <<EOT > android/gradle.properties
-          org.gradle.jvmargs=-Xmx4608m
-          android.useAndroidX=true
-          android.enableJetifier=true
-          android.newDsl=false
-          android.overrideVersionCheck=true
-          android.defaults.buildfeatures.buildconfig=true
-          EOT
+          # 2. Badilisha toleo la AGP 9.x au lipo juu kwenda 8.2.1 kwenye settings.gradle.kts au build.gradle.kts
+          find android/ -type f \( -name "*.gradle*" -o -name "*.kts" \) -exec sed -i 's/9\.[0-9]\.[0-9][a-zA-Z0-9-.]*/8.2.1/g' {} +
+          find android/ -type f \( -name "*.gradle*" -o -name "*.kts" \) -exec sed -i 's/8\.9\.[0-9][a-zA-Z0-9-.]*/8.2.1/g' {} +
 
           flutter pub get
           flutter build apk --release --no-tree-shake-icons
