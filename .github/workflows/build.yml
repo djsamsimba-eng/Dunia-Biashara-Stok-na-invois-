@@ -22,7 +22,7 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'
+          flutter-version: '3.29.0'
           cache: true
 
       - name: Extract Project Files
@@ -35,7 +35,7 @@ jobs:
         run: |
           cd ${{ env.PROJ_DIR }}
 
-          # 1. Tengeneza skripti ya Python tofauti ili kuepuka migogoro ya syntax
+          # 1. Tengeneza skripti ya kurekebisha sdk constraint pekee
           cat << 'EOF' > patch_pubspec.py
           import re
 
@@ -54,17 +54,20 @@ jobs:
               f.writelines(new_lines)
           EOF
 
-          # 2. Endesha skripti ya Python
           python3 patch_pubspec.py
 
-          # 3. Weka mipangilio ya gradle.properties
+          # 2. Weka flag za kuzuia AGP 9 kwenye gradle.properties zote mbili (root na android/)
           mkdir -p android
           echo "android.newDsl=false" >> android/gradle.properties
           echo "android.overrideVersionCheck=true" >> android/gradle.properties
+          echo "android.defaults.buildfeatures.buildconfig=true" >> android/gradle.properties
 
-          # 4. Pakua packages na build APK
+          echo "android.newDsl=false" >> gradle.properties
+          echo "android.overrideVersionCheck=true" >> gradle.properties
+
+          # 3. Fetch dependencies na build APK kwa kulinganisha flags za AGP
           flutter pub get
-          flutter build apk --release --no-tree-shake-icons
+          flutter build apk --release --no-tree-shake-icons --Pandroid.newDsl=false -Pandroid.overrideVersionCheck=true
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
