@@ -22,7 +22,7 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: 'master'
+          flutter-version: '3.29.0'
           cache: true
 
       - name: Extract Project Files
@@ -31,17 +31,9 @@ jobs:
           PROJ_DIR=$(find app_files -name "pubspec.yaml" -exec dirname {} \;)
           echo "PROJ_DIR=$PROJ_DIR" >> $GITHUB_ENV
 
-      - name: Patch AGP and Build APK
+      - name: Build APK
         run: |
           cd ${{ env.PROJ_DIR }}
-
-          # 1. Tengeneza/sasisha gradle.properties
-          mkdir -p android
-          echo "android.newDsl=false" >> android/gradle.properties
-          echo "android.overrideVersionCheck=true" >> android/gradle.properties
-          echo "android.defaults.buildfeatures.buildconfig=true" >> android/gradle.properties
-
-          # 2. Get dependencies & build APK
           flutter pub get
           flutter build apk --release --no-tree-shake-icons
 
