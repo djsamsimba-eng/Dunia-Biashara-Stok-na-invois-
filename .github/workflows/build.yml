@@ -29,9 +29,11 @@ jobs:
         run: |
           unzip Business_Invoice_Stock_2027-1.zip -d app_files
 
-      - name: Get Dependencies & Build APK
+      - name: Configure Gradle Properties & Build APK
         run: |
           cd app_files
+          mkdir -p android
+          echo "android.newDsl=false" >> android/gradle.properties
           flutter pub get
           flutter build apk --release
 
